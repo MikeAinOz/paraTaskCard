@@ -1,0 +1,23 @@
+{
+  "visual": {
+    "name": "ParaTaskCards 1.5.0",
+    "displayName": "ParaTaskCards 1.5.0",
+    "guid": "paraTaskCardBDD1DA3D7B8F41D0B27B48063F14B8FA",
+    "visualClassName": "Visual",
+    "version": "1.5.0",
+    "description": "ParaTaskCards",
+    "supportUrl": "smith11041104@gmail.com",
+    "gitHubUrl": ""
+  },
+  "apiVersion": "2.6.0",
+  "author": {
+    "name": "Dmitry Vann",
+    "email": "smith11041104@gmail.com"
+  },
+  "assets": {
+    "icon": "assets/icon.png"
+  },
+  "externalJS": [],
+  "style": "style/visual.less",
+  "capabilities": "capabilities.json"
+}
