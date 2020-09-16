@@ -102,8 +102,8 @@ export interface SelectionIdOption extends LabelEnabledDataPoint, SelectableData
 export class SettingState {
     isUrlData: boolean = true;
     sampleJSONData: boolean = false;
-    templateUrl: string = "https://aon42.blob.core.windows.net/container42/TaskCardTwo.json";
-    targetUrl: string = "";
+    templateUrl: string = "https://";
+    targetUrl: string = "https://";
     cardWidth: number = 400;
     padding: number = 10;
     margin: number = 10;
