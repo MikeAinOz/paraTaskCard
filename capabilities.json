@@ -360,7 +360,6 @@
             "Tooltips"
         ]
     },
-    "supportsHighlight": true,
     "suppressDefaultTitle": true,
     "supportsSynchronizingFilterState": true,
     "sorting": {

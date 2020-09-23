@@ -143,6 +143,16 @@ export class Visual implements IVisual {
     private svalueName;
     private sampleData;
     public static scrollWidth = 20;
+    private adaptiveCard;
+    private inputChanged;
+    private changedSampleData;
+    private startFlag;
+    private categoryName;
+    private categoryId;
+    private prevData = [];
+    private prevTemplateUrl = "https://";
+    private formatterValuesArr = [];
+    public static categoryJSON = "{}";
 
     private syncSelectionState(
         selection: Selection ,
@@ -178,7 +188,7 @@ export class Visual implements IVisual {
     public renderCard(card) {
 
         // Create an AdaptiveCard instance
-        var adaptiveCard = new AdaptiveCards.AdaptiveCard();
+        let adaptiveCard = new AdaptiveCards.AdaptiveCard();
 
         // Use Fabric controls when rendering Adaptive Cards
         // ACFabric.useFabricComponents();
@@ -208,25 +218,36 @@ export class Visual implements IVisual {
 
     public renderCard1(templateJSON, dataFields) {
         
+        let json = JSON.parse(templateJSON);
         // Create a Template instance from the template payload
-        var template = new ACData.Template(JSON.parse(templateJSON));
+        let template = new ACData.Template(json);
         
         // Create a data binding context, and set its $root property to the
         // data object to bind the template to
         let sampleData = dataFields, that = this;
         if (this.settings.sampleJSONData && sampleData !== null) sampleData = JSON.parse(dataFields);
-        var context: ACData.IEvaluationContext = { $root : sampleData };
+        let context: ACData.IEvaluationContext = { $root : sampleData };
         
         // "Expand" the template - this generates the final Adaptive Card,
         // ready to render
-        var card = template.expand(context);
+        let card = template.expand(context);
         
         // Render the card
-        var adaptiveCard = new AdaptiveCards.AdaptiveCard();
+        let adaptiveCard = new AdaptiveCards.AdaptiveCard();
         // Use Fabric controls when rendering Adaptive Cards
         // ACFabric.useFabricComponents();
         adaptiveCard.parse(card);
-        adaptiveCard.onExecuteAction = function(action) { that.submitFunction(JSON.stringify(action["_processedData"])); }
+        adaptiveCard.onExecuteAction = function(action) { 
+            that.startFlag = false;
+            let data = action["_processedData"];
+            if (that.categoryName) {
+                data[that.categoryName] = that.categoryId;
+            }
+            if (!that.inputChanged) that.submitFunction(JSON.stringify(data));
+            that.changedSampleData = data;
+            that.inputChanged = false; 
+        }
+        this.adaptiveCard = adaptiveCard;
         return adaptiveCard.render();
     }
 
@@ -257,17 +278,15 @@ export class Visual implements IVisual {
             .then(async function (response) {
                 if (response.status >= 400 && response.status < 600) {
                     const text = await response.text();
-                    console.log('Text Function', text, 'Status', response.status);
                 }
                 else {
                     const text = await response.text();
                 }
                 $(".loading").hide();
-                that.functionAlert("Success!");
+                that.functionAlert("Task Submitted");
 
             })
             .catch((error) => {
-                console.error('Error:', error);
                 $(".loading").hide();
                 that.functionAlert("Failed!");
             });
@@ -277,6 +296,7 @@ export class Visual implements IVisual {
         this.events = options.host.eventService;
         this.templateJSON = {};
         this.dateFields = {};
+        this.startFlag = true;
 
         let element = options.element;
         this.element = element;
@@ -306,10 +326,16 @@ export class Visual implements IVisual {
     }
 
     private drawHtml(sandboxWidth, sandboxHeight, data) {
-        let maxWidth;
+        let maxWidth, that = this;
         this.bigDiv.style('overflow', 'auto');
         this.bigDiv.style('width', sandboxWidth + "px").style('height', sandboxHeight + "px");
         this.drawCard(data, sandboxWidth);
+        let input = this.cardDiv.selectAll("input, select"), button = this.cardDiv.select("button");
+        that.inputChanged = false;
+        // input.on("change", function(){
+        //     that.inputChanged = true;
+        //     button.dispatch("click");
+        // });
     }
 
     private drawCard(data, sandboxWidth) {
@@ -455,11 +481,17 @@ export class Visual implements IVisual {
         let data = [];
         this.sampleData = [];
         let svalue = null;
+        
+        if (!this.startFlag) svalue = this.changedSampleData;
         if (svalueArr.length > 0) {
             if (!this.settings.sampleJSONData) {
-                svalue = {};
+                if (this.startFlag) svalue = {};
                 for (let j = 0; j < svalueArr.length; j++) {
-                    svalue[this.svalueName[j].toString()] = svalueArr[j][0].toString();
+                    let val = svalueArr[j][0], name = this.svalueName[j].toString();
+                    let dt = new Date(val);
+                    if (!isNaN(svalueArr[j][0])) svalue[name] = Number(val);
+                    else if (val && dt.toString() !== "Invalid Date" && dt.getFullYear() > 1800 && (Visual.ISDATE(val))) svalue[name] = this.getISOString(dt);
+                    else svalue[name] = this.formatterValuesArr[j].format(Visual.GETSTRING(val));
                 }
             } else svalue = svalueArr[0][0];
         }
@@ -468,11 +500,57 @@ export class Visual implements IVisual {
         return data;
     }
 
+    public getISOString(dt) {
+        let val = dt.toISOString();
+        if (dt.getHours() === 0 && dt.getMinutes() === 0 && dt.getSeconds() === 0) val = val.substr(0, val.length - 5) + "Z";
+        return val;
+    }
+
+    public getFormatter(dataView) {
+        let fcolumns = dataView.metadata.columns;
+        let formatterValuesArr = [], formatterValuesArra = [], valuesDisplayName = [];
+        let valueNames = [], valueSources = dataView.categorical.values;
+        for (let i = 0; i < valueSources.length; i++) {
+            valueNames.push(valueSources[i].source.displayName);
+        }
+        for (let i = 0; i < fcolumns.length; i++) {
+             if (fcolumns[i].roles["svalue"]) {
+                let formatter = valueFormatter.create({
+                    format: valueFormatter.getFormatStringByColumn(
+                        dataView.metadata.columns[i],
+                        true),
+                });
+                formatterValuesArr.push(formatter);
+                formatterValuesArra.push(formatter);
+                let displayName = fcolumns[i].displayName,
+                    j;
+                for (j = 0; j < valuesDisplayName.length; j++) {
+                    if (displayName === valuesDisplayName[j]) break;
+                }
+                valuesDisplayName.push(displayName);
+            }
+        }
+        for (let i = 0; i < valuesDisplayName.length; i++) {
+            let j;
+            for (j = 0; j < valueNames.length; j++) {
+                if (valuesDisplayName[i] === valueNames[j]) {
+                    break;
+                }
+            }
+            let tmp = formatterValuesArr[j];
+            formatterValuesArr[j] = formatterValuesArra[i];
+            formatterValuesArra[i] = tmp;
+        }
+        this.formatterValuesArr = formatterValuesArr;
+    }
+
     public update(options: VisualUpdateOptions) {
         this.events.renderingStarted(options);
+
         // this.createLandingPage(options);
         // assert dataView
         if (!options.dataViews || !options.dataViews[0]) { return; }
+
         let dataViews = options.dataViews, categorical = dataViews[0].categorical, values = [], that = this;
         if (categorical.values) values = categorical.values;
         let objects = dataViews[0].metadata.objects;
@@ -504,24 +582,29 @@ export class Visual implements IVisual {
                 svalueArr.push(tmp);
             }
         }
-        if (categorical.categories) categories = categorical.categories[0].values;
+        this.categoryName = null;
+        this.getFormatter(dataViews[0]);
+        if (categorical.categories) categories = categorical.categories[0].values, this.categoryName = categorical.categories[0].source.displayName, this.categoryId = categorical.categories[0].values[0];
         else categories = this.cvalueName;
         let data = this.getData(categories, cvalueArr, svalueArr);
-        this.cardDiv.selectAll("*").remove();
-        if (this.settings.isUrlData) {            
+        this.cardDiv.selectAll("*").remove(); 
+        if (that.prevTemplateUrl !== that.settings.templateUrl || Visual.categoryJSON !== JSON.stringify(options.dataViews[0].categorical)) {
             // using XMLHttpRequest
-            var xhr = new XMLHttpRequest();
+            let xhr = new XMLHttpRequest();
             xhr.open("GET", this.settings.templateUrl, true);
             xhr.onload = function () {
                 for (let i = 0; i < data.length; i++) data[i].cvalue = xhr.responseText, that.templateJSON = xhr.responseText;
                 that.drawHtml(sandboxWidth, sandboxHeight, data);
+                that.prevTemplateUrl = that.settings.templateUrl;
+                that.prevData = data;
+                Visual.categoryJSON = JSON.stringify(options.dataViews[0].categorical);
             };
             xhr.onerror = function () {
                 that.cardDiv.append("text").text("Document not loaded, check Url");
             }
             xhr.send();
         } else {
-            this.drawHtml(sandboxWidth, sandboxHeight, data);
+            this.drawHtml(sandboxWidth, sandboxHeight, that.prevData);
         }
         this.tooltipServiceWrapper.addTooltip(this.clipSelection, (tooltipEvent: TooltipEventArgs < SelectionIdOption > ) => this.getTooltipData(tooltipEvent)
             , (tooltipEvent: TooltipEventArgs < SelectionIdOption > ) => tooltipEvent.data.identity);
