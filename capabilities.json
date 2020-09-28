@@ -6,8 +6,13 @@
             "kind": "Grouping"
         },
         {
-            "displayName": "Fields",
+            "displayName": "Normal Fields",
             "name": "svalue",
+            "kind": "Measure"
+        },
+        {
+            "displayName": "JSON Fields",
+            "name": "jvalue",
             "kind": "Measure"
         }
     ],
@@ -38,6 +43,15 @@
                     "type": {
                         "text": true 
                     }
+                },
+                "theme": {
+                    "displayName": "Theme",
+                    "type": { "enumeration": [ { "displayName": "Default", "value": "0" },
+                                                { "displayName": "Theme1", "value": "1" },
+                                                { "displayName": "Theme2", "value": "2" },
+                                                { "displayName": "Theme3", "value": "3" },
+                                                { "displayName": "Theme4", "value": "4" },
+                                                { "displayName": "Theme5", "value": "5" }] }
                 },
                 "cardWidth": {
                     "displayName": "Card Size",
@@ -344,8 +358,8 @@
                 }
             },
             "values": {
-                "select": [ { "bind": { "to": "cvalue" } },
-                            { "bind": { "to": "svalue" } }],
+                "select": [ { "bind": { "to": "svalue" } },
+                            { "bind": { "to": "jvalue" } }],
                 "dataReductionAlgorithm": { "top": {} }
             }
           }

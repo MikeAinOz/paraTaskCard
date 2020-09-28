@@ -1,7 +1,7 @@
 {
-  "name": "ParaTaskCards 2.1.0",
+  "name": "ParaTaskCards 2.5.0",
   "description": "ParaTaskCards",
-  "version": "2.1.0",
+  "version": "2.5.0",
   "author": {
     "name": "Dmitry Vann",
     "email": "smith11041104@gmail.com"
@@ -24,7 +24,7 @@
   "dependencies": {
     "@babel/polyfill": "^7.10.1",
     "@fluentui/react": "^7.132.0",
-    "adaptivecards": "^2.1.0",
+    "adaptivecards": "^2.2.0",
     "adaptivecards-fabric": "^1.1.0",
     "adaptivecards-templating": "^1.1.0",
     "core-js": "^3.6.5",

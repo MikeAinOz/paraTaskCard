@@ -204,3 +204,623 @@
     transform: rotate(360deg);
   }
 }
+
+.ac-adaptiveCard {
+  background-color: transparent !important;
+}
+
+.theme1 {
+    
+  .ac-input-container {
+    select {
+      background: none;
+      box-sizing: border-box;
+      width: 100%;
+      margin: 0;
+      font-size: 16px;
+      outline: none;
+      padding: 5px;
+      /* Focus style */
+    }
+    select:focus {
+      background-color: transparent;
+      outline: none;
+    }
+    option {
+      font-weight: normal;
+    }
+    select:focus {
+      box-shadow: 0 3px 4px rgba(0, 91, 166, 0.3) inset;
+      outline: 3px solid #005BA6;
+      outline-offset: -3px;
+    }
+    select[disabled], select:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    select:not(:focus):invalid {
+      color: #C7C7C7;
+    }
+  }
+
+  input {
+      display: block;
+      width: 100%;
+      padding: 8px 16px;
+      line-height: 25px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      border-radius: 6px;
+      -webkit-appearance: none;
+      color: #99A3BA;
+      border: 1px solid #CDD9ED;
+      background: #FFF;
+      transition: border .3s ease;
+      &::placeholder {
+          color: #CBD1DC;
+      }
+      &:focus {
+          outline: none;
+          border-color: #275EFE;
+      }
+  }
+
+  .childDiv {
+      position: relative;
+      display: flex;
+      width: 100%;
+      & > span,
+      input {
+          white-space: nowrap;
+          display: block;
+          &:not(:first-child):not(:last-child) {
+              border-radius: 0;
+          }
+          &:first-child {
+              border-radius: 6px 0 0 6px;
+          }
+          &:last-child {
+              border-radius: 0 6px 6px 0;
+          }
+          &:not(:first-child) {
+              margin-left: -1px;
+          }
+      }
+      input {
+          position: relative;
+          z-index: 1;
+          flex: 1 1 auto;
+          width: 1%;
+          margin-top: 0;
+          margin-bottom: 0;
+      }
+      & > span {
+          text-align: center;
+          padding: 8px 12px;
+          font-size: 14px;
+          line-height: 25px;
+          color: #99A3BA;
+          background: #EEF4FF;
+          border: 1px solid #CDD9ED;
+          transition: background .3s ease, border .3s ease, color .3s ease;
+      }
+      &:focus-within {
+          & > span {
+              color: #fff;
+              background: #678EFE;
+              border-color: #275EFE;
+          }
+      }
+  }
+  * {
+    box-sizing: inherit;
+    &:before,
+    &:after {
+        box-sizing: inherit;
+    }
+}
+  .ac-adaptiveCard {
+    background: #F5F9FF !important;
+  }
+  // Center
+  .childDiv {
+      min-height: 100vh;
+      font-family: 'Mukta Malar', Arial;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      background: #F5F9FF;
+      input {
+          max-width: 360px;
+          &:not(:last-child) {
+              margin-bottom: 32px;
+          }
+      }
+  }
+  button {
+    color: #fff !important;
+    text-transform: uppercase !important;
+    text-decoration: none !important;
+    background: #ed3330 !important;
+    padding: 20px !important;
+    border-radius: 5px !important;
+    display: inline-block !important;
+    border: none !important;
+    transition: all 0.4s ease 0s !important;
+  }
+  button:hover {
+    background: #434343 !important;
+    letter-spacing: 1px !important;
+    -webkit-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57) !important;
+    -moz-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57) !important;
+    box-shadow: 5px 40px -10px rgba(0,0,0,0.57) !important;
+    transition: all 0.4s ease 0s !important;
+  }
+}
+
+.theme2 {
+  .ac-input-container {
+  
+    // needs to be relative so the :focus span is positioned correctly
+    position:relative;
+    
+    // bigger font size for demo purposes
+    font-size: 1.5em;
+    
+    // the border gradient
+    background: linear-gradient(21deg, #10abff, #1beabd) !important;
+    
+    // the width of the input border
+    padding: 3px;
+    
+    // we want inline fields by default
+    display: inline-block;
+    
+    // we want rounded corners no matter the size of the field
+    border-radius: 9999em;
+    
+    // style of the actual input field
+    *:not(span) {
+      position: relative;
+      display: inherit;
+      border-radius: inherit;
+      margin: 0;
+      border: none;
+      outline: none;
+      padding: 0 .325em;
+      z-index: 1; // needs to be above the :focus span
+      
+      // summon fancy shadow styles when focussed
+      &:focus + span {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    // we don't animate box-shadow directly as that can't be done on the GPU, only animate opacity and transform for high performance animations.
+    span {
+      
+      transform: scale(.993, .94); // scale it down just a little bit
+      transition: transform .5s, opacity .25s;
+      opacity: 0; // is hidden by default
+      
+      position:absolute;
+      z-index: 0; // needs to be below the field (would block input otherwise)
+      margin:4px; // a bit bigger than .input padding, this prevents background color pixels shining through
+      left:0;
+      top:0;
+      right:0;
+      bottom:0;
+      border-radius: inherit;
+      pointer-events: none; // this allows the user to click through this element, as the shadow is rather wide it might overlap with other fields and we don't want to block those.
+      
+      // fancy shadow styles
+      box-shadow: inset 0 0 0 3px #fff,
+        0 0 0 4px #fff,
+        3px -3px 30px #1beabd, 
+        -3px 3px 30px #10abff;
+    }
+    select {
+      &:focus, &:active {
+        outline: 0;
+        border-bottom-color: red;
+      }
+    }  
+  }
+
+  label,
+  label span {
+    color: #141823;
+  }
+  button {
+    color: #fff !important;
+    text-transform: uppercase;
+    text-decoration: none;
+    background: #60a3bc;
+    padding: 20px;
+    border-radius: 50px;
+    display: inline-block;
+    border: none;
+    transition: all 0.4s ease 0s;
+  }
+  button:hover {
+    text-shadow: 0px 0px 6px rgba(255, 255, 255, 1);
+    -webkit-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);
+    -moz-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);
+    transition: all 0.4s ease 0s;
+  }
+}
+
+.theme3 {
+
+  .ac-input-container select {
+    background-color: #0563af;
+    color: white;
+    padding: 5px;
+    border: none;
+    font-size: 16px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+    -webkit-appearance: button;
+    appearance: button;
+    outline: none;
+  }
+  
+  .ac-input-container select option {
+    padding: 30px;
+  }
+
+  .childDiv {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    color: #455A64;
+    background-color: #3a3a3a;
+    font-family: var(--fontFamily);
+    font-size: var(--fontSizeMd);
+    line-height: var(--lineHeightMd);
+  }
+  .ac-adaptiveCard {
+    background-color: #3a3a3a !important;
+  }
+  
+  .childDiv {
+    flex: 0 0 80%;
+    max-width: 80%;
+  }
+  
+  input {
+    display: block;
+    margin: 0;
+    padding: 5px;
+    color: inherit;
+    width: 100%;
+    font-family: inherit;
+    font-size: var(--inputFontSize);
+    font-weight: inherit;
+    line-height: var(--inputLineHeight);
+    border: none;
+    border-radius: 0.4rem;
+    transition: box-shadow var(--transitionDuration);
+  }
+  
+  input::placeholder {
+    color: #B0BEC5;
+  }
+  
+  input:focus {
+    outline: none;
+    box-shadow: 0.2rem 0.8rem 1.6rem var(--colorPrimary600);
+  }
+
+  label,
+  label span {
+    color: #292f33;
+  }
+  button {
+    color: #494949 !important;
+    text-transform: uppercase;
+    text-decoration: none;
+    background: #ffffff;
+    padding: 20px;
+    border: 4px solid #494949 !important;
+    display: inline-block;
+    transition: all 0.4s ease 0s;
+  }
+  button:hover {
+    color: #ffffff !important;
+    background: #f6b93b;
+    border-color: #f6b93b !important;
+    transition: all 0.4s ease 0s;
+  }
+}
+
+.theme4 {
+
+  /* ====================================================
+  Recreating the email field from https://webflow.com/cms. Just an experiment - not as cross-browser friendly as the original.
+  Changed:
+  - animated gradient bar to :after element
+  - flexbox for layout
+  ==================================================== */
+
+  // reset
+  html { box-sizing: border-box; font-size: 10px; }
+  *, *:before, *:after { box-sizing: inherit; }
+  body, ul, li  { margin: 0; padding: 0; }
+  li { list-style: none; }
+  p, h1, h2, h3, h4, h5, h6 { margin-top: 0; }
+  a { text-decoration: none; }
+  input { border-style: none; background: transparent; outline: none; }
+  button { padding: 0; background: none; border: none; outline: none; }
+
+  // some basic page styles
+  .ac-adaptiveCard {
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif !important;
+    background-image: radial-gradient(circle at 0% 0%, #373b52, #252736 51%, #1d1e26) !important;
+  }
+
+  // for demo
+  h1.demo {
+    text-align: center;
+    font-size: 2.4rem;
+    font-weight: normal;
+    margin-bottom: 1rem;
+    color: #f5f6ff;
+  }
+  a.demo {
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: normal;
+    color: rgba(202, 205, 239, 0.8);
+    margin-bottom: 3rem;
+  }
+  .demo-flex-spacer {
+    flex-grow: 1;
+  }
+  .ac-adaptiveCard {
+    display: flex;
+    flex-direction: column;
+    //justify-content: center;
+    max-width: 1600px;
+    padding: 0 15px;
+    margin: 0 auto;
+  }
+
+  // gradient animation
+  @keyframes gradient { 
+    0%{background-position:0 0}
+    100%{background-position:100% 0}
+  }
+
+  .ac-input-container {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    max-width: 400px;
+    border-radius: 2px;
+    background: rgba(57, 63, 84, 0.8);
+    &:after {
+      content: "";
+      position: absolute;
+      left: 0px;
+      right: 0px;
+      bottom: 0px;
+      z-index: 999;
+      height: 2px;
+      border-bottom-left-radius: 2px;
+      border-bottom-right-radius: 2px;
+      background-position: 0% 0%;
+      background: linear-gradient(to right, #B294FF, #57E6E6, #FEFFB8, #57E6E6, #B294FF, #57E6E6);
+      background-size: 500% auto;
+      animation: gradient 3s linear infinite;
+    }
+  }
+
+  .ac-input-container input {
+    flex-grow: 1;
+    color: #BFD2FF;
+    font-size: 1.0rem;
+    line-height: 1.4rem;
+    vertical-align: middle;
+    &::-webkit-input-placeholder {
+      color: #7881A1;
+    }
+  }
+
+  button {
+    color:  #7881A1;
+    font-size: 0.8rem;
+    line-height: 1rem;
+    vertical-align: middle;
+    transition: color .25s;
+    &:hover {
+      color: #BFD2FF;
+    }
+  }
+  button {
+    color: #20bf6b !important;
+    text-transform: uppercase;
+    background: #ffffff;
+    padding: 15px;
+    border: 4px solid #20bf6b !important;
+    border-radius: 6px;
+    display: inline-block;
+    transition: all 0.3s ease 0s;
+  }
+  button:hover {
+    color: #494949 !important;
+    border-radius: 50px;
+    border-color: #494949 !important;
+    transition: all 0.3s ease 0s;
+  }
+}
+
+.theme5 {
+  select {
+    outline: 0;
+    box-shadow: none;
+    border: 0 !important;
+    background: #2c3e50;
+    background-image: none;
+  }
+  /* Remove IE arrow */
+  select::-ms-expand {
+    display: none;
+  }
+  /* Custom Select */
+  .select {
+    position: relative;
+    display: flex;
+    width: 20em;
+    height: 3em;
+    line-height: 3;
+    background: #2c3e50;
+    overflow: hidden;
+    border-radius: .25em;
+  }
+  select {
+    flex: 1;
+    padding: 0 .5em;
+    color: #fff;
+    cursor: pointer;
+  }
+  /* Arrow */
+  .select::after {
+    content: '\25BC';
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0 1em;
+    background: #34495e;
+    cursor: pointer;
+    pointer-events: none;
+    -webkit-transition: .25s all ease;
+    -o-transition: .25s all ease;
+    transition: .25s all ease;
+  }
+  /* Transition */
+  .select:hover::after {
+    color: #f39c12;
+  }
+  
+  .ac-adaptiveCard{
+    background-color: rgba(0, 0, 0, 0.89) !important;
+    border-radius:3px !important;
+  }
+  .ac-input-container{
+    position:relative;
+    margin-bottom:25px;
+  }
+  .ac-input-container input{ 
+    border:0;
+    border-bottom:1px solid #555;  
+    background:transparent;
+    width:100%;
+    padding:8px 0 5px 0;
+    font-size:16px;
+    color:#fff;
+  }
+  .ac-input-container input:focus{ 
+   border:none;	
+   outline:none;
+   border-bottom:1px solid #e74c3c;	
+  }
+  button{
+    color:#fff;
+    background-color:#e74c3c;
+    outline: none;
+    border: 0;
+    color: #fff;
+    padding:10px 20px;
+    text-transform:uppercase;
+    margin-top:50px;
+    border-radius:2px;
+    cursor:pointer;
+    position:relative;
+  }
+  /*.btn:after{
+    content:"";
+    position:absolute;
+    background:rgba(0,0,0,0.50);
+    top:0;
+    right:0;
+    width:100%;
+    height:100%;
+  }*/
+  .ac-input-container input:focus ~ label,
+  .ac-input-container input:valid ~ label{
+    top:-12px;
+    font-size:12px;
+    
+  }
+  
+  // button {
+  //   border: none;
+  //   background: #404040;
+  //   color: #ffffff !important;
+  //   font-weight: 100;
+  //   padding: 20px;
+  //   text-transform: uppercase;
+  //   border-radius: 6px;
+  //   display: inline-block;
+  //   transition: all 0.3s ease 0s;
+  // }
+  button:hover {
+    color: #e74c3c !important;
+    font-weight: 700 !important;
+    letter-spacing: 3px;
+    background: #FFF;
+    -webkit-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);
+    -moz-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);
+    transition: all 0.3s ease 0s;
+  }
+}
+
+.theme6 {
+  label,
+  label span {
+    color: #141823;
+  }
+  button {
+    border-radius: 4px;
+    background: linear-gradient(to right, #67b26b, #4ca2cb) !important;
+    border: none;
+    color: #FFFFFF;
+    text-align: center;
+    text-transform: uppercase;
+    font-size: 22px;
+    padding: 20px;
+    width: 200px;
+    transition: all 0.4s;
+    cursor: pointer;
+    margin: 5px;
+  }
+  button span {
+    cursor: pointer;
+    display: inline-block;
+    position: relative;
+    transition: 0.4s;
+  }
+  button span:after {
+    content: '\00bb';
+    position: absolute;
+    opacity: 0;
+    top: 0;
+    right: -20px;
+    transition: 0.5s;
+  }
+  button:hover span {
+    padding-right: 25px;
+  }
+  button:hover span:after {
+    opacity: 1;
+    right: 0;
+  }
+}

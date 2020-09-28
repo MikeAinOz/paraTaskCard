@@ -115,6 +115,7 @@ export class SettingState {
     categoryFontWeight: string = "Bold";
     borderColor: string = "#000000";
     borderSize: number = 1;
+    theme: number = 0;
 }
 
 export class Visual implements IVisual {
@@ -139,19 +140,18 @@ export class Visual implements IVisual {
     private element;
     private templateJSON;
     private dateFields;
-    private cvalueName;
+    private jvalueName;
     private svalueName;
     private sampleData;
     public static scrollWidth = 20;
     private adaptiveCard;
     private inputChanged;
-    private changedSampleData;
-    private startFlag;
     private categoryName;
     private categoryId;
     private prevData = [];
     private prevTemplateUrl = "https://";
     private formatterValuesArr = [];
+    private formatterValuesJArr = [];
     public static categoryJSON = "{}";
 
     private syncSelectionState(
@@ -238,13 +238,11 @@ export class Visual implements IVisual {
         // ACFabric.useFabricComponents();
         adaptiveCard.parse(card);
         adaptiveCard.onExecuteAction = function(action) { 
-            that.startFlag = false;
             let data = action["_processedData"];
             if (that.categoryName) {
                 data[that.categoryName] = that.categoryId;
             }
             if (!that.inputChanged) that.submitFunction(JSON.stringify(data));
-            that.changedSampleData = data;
             that.inputChanged = false; 
         }
         this.adaptiveCard = adaptiveCard;
@@ -278,12 +276,13 @@ export class Visual implements IVisual {
             .then(async function (response) {
                 if (response.status >= 400 && response.status < 600) {
                     const text = await response.text();
+                    that.functionAlert("Failed!");
                 }
                 else {
                     const text = await response.text();
+                    that.functionAlert("Task Submitted");
                 }
                 $(".loading").hide();
-                that.functionAlert("Task Submitted");
 
             })
             .catch((error) => {
@@ -296,7 +295,6 @@ export class Visual implements IVisual {
         this.events = options.host.eventService;
         this.templateJSON = {};
         this.dateFields = {};
-        this.startFlag = true;
 
         let element = options.element;
         this.element = element;
@@ -325,13 +323,25 @@ export class Visual implements IVisual {
             options.element);
     }
 
+    public removeAllCalss() {
+        $(".bigDiv").removeClass("theme1");
+        $(".bigDiv").removeClass("theme2");
+        $(".bigDiv").removeClass("theme3");
+        $(".bigDiv").removeClass("theme4");
+        $(".bigDiv").removeClass("theme5");
+        $(".bigDiv").removeClass("theme6");
+    }
+
     private drawHtml(sandboxWidth, sandboxHeight, data) {
-        let maxWidth, that = this;
+        let maxWidth, that = this, theme = this.settings.theme;
+        this.cardDiv.selectAll("*").remove(); 
         this.bigDiv.style('overflow', 'auto');
         this.bigDiv.style('width', sandboxWidth + "px").style('height', sandboxHeight + "px");
         this.drawCard(data, sandboxWidth);
         let input = this.cardDiv.selectAll("input, select"), button = this.cardDiv.select("button");
         that.inputChanged = false;
+        this.removeAllCalss();
+        if (theme !== 0) $(".bigDiv").addClass("theme" + theme);
         // input.on("change", function(){
         //     that.inputChanged = true;
         //     button.dispatch("click");
@@ -365,6 +375,7 @@ export class Visual implements IVisual {
         this.setSetting(objects, this.settings, 1, "renderGroup", "borderShow", 0);
         this.setSetting(objects, this.settings, 2, "renderGroup", "borderColor", 0);
         this.setSetting(objects, this.settings, 1, "renderGroup", "borderSize", 0);
+        this.setSetting(objects, this.settings, 1, "renderGroup", "theme", 0);
         this.setSetting(objects, this.settings, 1, "categorySettings", "categoryShow", 0);
         this.setSetting(objects, this.settings, 1, "categorySettings", "categoryFontFamily", 0);
         this.setSetting(objects, this.settings, 1, "categorySettings", "categoryFontWeight", 0);
@@ -477,26 +488,32 @@ export class Visual implements IVisual {
         }
     }
 
-    public getData(categories, cvalueArr, svalueArr) {
+    public getValue(val, formatter) {
+        let dt = new Date(val);
+        if (!isNaN(val)) return Number(val);
+        else if (val && dt.toString() !== "Invalid Date" && dt.getFullYear() > 1800 && (Visual.ISDATE(val))) return this.getISOString(dt);
+        else return formatter.format(Visual.GETSTRING(val));   
+    }
+
+    public getData(categories, jvalueArr, svalueArr) {
         let data = [];
         this.sampleData = [];
-        let svalue = null;
+        let svalue = {};
         
-        if (!this.startFlag) svalue = this.changedSampleData;
         if (svalueArr.length > 0) {
             if (!this.settings.sampleJSONData) {
-                if (this.startFlag) svalue = {};
                 for (let j = 0; j < svalueArr.length; j++) {
                     let val = svalueArr[j][0], name = this.svalueName[j].toString();
-                    let dt = new Date(val);
-                    if (!isNaN(svalueArr[j][0])) svalue[name] = Number(val);
-                    else if (val && dt.toString() !== "Invalid Date" && dt.getFullYear() > 1800 && (Visual.ISDATE(val))) svalue[name] = this.getISOString(dt);
-                    else svalue[name] = this.formatterValuesArr[j].format(Visual.GETSTRING(val));
+                    svalue[name] = this.getValue(val, this.formatterValuesArr[j]);
+                }
+                for (let j = 0; j < jvalueArr.length; j++) {
+                    let val = jvalueArr[j][0], name = this.jvalueName[j].toString();
+                    svalue[name] = JSON.parse(val.toString());
                 }
             } else svalue = svalueArr[0][0];
         }
         this.sampleData.push(svalue);
-        data.push({category: categories[0], cvalue: cvalueArr[0], svalue: svalue});
+        data.push({category: categories[0], cvalue: {}, svalue: svalue});
         return data;
     }
 
@@ -509,6 +526,7 @@ export class Visual implements IVisual {
     public getFormatter(dataView) {
         let fcolumns = dataView.metadata.columns;
         let formatterValuesArr = [], formatterValuesArra = [], valuesDisplayName = [];
+        let formatterValuesJArr = [], formatterValuesJArra = [], valuesCDisplayName = [];
         let valueNames = [], valueSources = dataView.categorical.values;
         for (let i = 0; i < valueSources.length; i++) {
             valueNames.push(valueSources[i].source.displayName);
@@ -528,6 +546,20 @@ export class Visual implements IVisual {
                     if (displayName === valuesDisplayName[j]) break;
                 }
                 valuesDisplayName.push(displayName);
+            } else if (fcolumns[i].roles["jvalue"]) {
+                let formatter = valueFormatter.create({
+                    format: valueFormatter.getFormatStringByColumn(
+                        dataView.metadata.columns[i],
+                        true),
+                });
+                formatterValuesJArr.push(formatter);
+                formatterValuesJArra.push(formatter);
+                let displayName = fcolumns[i].displayName,
+                    j;
+                for (j = 0; j < valuesCDisplayName.length; j++) {
+                    if (displayName === valuesCDisplayName[j]) break;
+                }
+                valuesCDisplayName.push(displayName);
             }
         }
         for (let i = 0; i < valuesDisplayName.length; i++) {
@@ -541,7 +573,21 @@ export class Visual implements IVisual {
             formatterValuesArr[j] = formatterValuesArra[i];
             formatterValuesArra[i] = tmp;
         }
+        let len = valuesDisplayName.length;
+        for (let i = 0; i < valuesCDisplayName.length; i++) {
+            let j;
+            for (j = len; j < valueNames.length; j++) {
+                if (valuesCDisplayName[i] == valueNames[j]) {
+                    break;
+                }
+            }
+            let tmp = formatterValuesJArra[i];
+            formatterValuesJArr[i] = formatterValuesJArra[j - len];
+            formatterValuesJArra[j - len] = tmp;
+        }
+
         this.formatterValuesArr = formatterValuesArr;
+        this.formatterValuesJArr = formatterValuesJArr;
     }
 
     public update(options: VisualUpdateOptions) {
@@ -558,20 +604,12 @@ export class Visual implements IVisual {
         this.setSettings(objects);
         
         let columns = dataViews[0].metadata.columns, sandboxWidth = $('#sandbox-host').width(), sandboxHeight = $('#sandbox-host').height();
-        let cvalueArr = [], svalueArr = [], categories = [];
+        let svalueArr = [], categories = [], jvalueArr = [];
         this.setSelectedIdOptions(categorical, dataViews[0]);
         let innerValueCount = 0;
-        this.cvalueName = [], this.svalueName = [];
+        this.jvalueName = [], this.svalueName = [];
         for (let i = 0; i < values.length; i++) {
-            if (values[i].source.roles["cvalue"]) {
-                this.cvalueName.push(values[i].source.displayName);
-                let tmp = [];
-                for (let j = 0; j < values[i].values.length; j++) { 
-                    tmp.push(values[i].values[j]);
-                }
-                if (categorical.categories) cvalueArr = tmp;
-                else cvalueArr = tmp[0];
-            } else if (values[i].source.roles["svalue"]) {
+            if (values[i].source.roles["svalue"]) {
                 let displayName = values[i].source.displayName.toString();
                 if (displayName.indexOf("First ") == 0) displayName = displayName.slice(6);
                 this.svalueName.push(displayName);
@@ -580,14 +618,22 @@ export class Visual implements IVisual {
                     tmp.push(values[i].values[j]);
                 }
                 svalueArr.push(tmp);
+            }else if (values[i].source.roles["jvalue"]) {
+                let displayName = values[i].source.displayName.toString();
+                if (displayName.indexOf("First ") == 0) displayName = displayName.slice(6);
+                this.jvalueName.push(displayName);
+                let tmp = [];
+                for (let j = 0; j < values[i].values.length; j++) { 
+                    tmp.push(values[i].values[j]);
+                }
+                jvalueArr.push(tmp);
             }
         }
         this.categoryName = null;
         this.getFormatter(dataViews[0]);
         if (categorical.categories) categories = categorical.categories[0].values, this.categoryName = categorical.categories[0].source.displayName, this.categoryId = categorical.categories[0].values[0];
-        else categories = this.cvalueName;
-        let data = this.getData(categories, cvalueArr, svalueArr);
-        this.cardDiv.selectAll("*").remove(); 
+        else categories = this.jvalueName;
+        let data = this.getData(categories, jvalueArr, svalueArr);
         if (that.prevTemplateUrl !== that.settings.templateUrl || Visual.categoryJSON !== JSON.stringify(options.dataViews[0].categorical)) {
             // using XMLHttpRequest
             let xhr = new XMLHttpRequest();
@@ -677,6 +723,7 @@ export class Visual implements IVisual {
             properties: {
                 targetUrl: this.settings.targetUrl,
                 cardWidth: this.settings.cardWidth,
+                theme: this.settings.theme,
                 margin: this.settings.margin,
                 padding: this.settings.padding,
                 borderShow: this.settings.borderShow
