@@ -6,6 +6,11 @@
             "kind": "Grouping"
         },
         {
+            "displayName": "Template",
+            "name": "cvalue",
+            "kind": "Measure"
+        },
+        {
             "displayName": "Normal Fields",
             "name": "svalue",
             "kind": "Measure"
@@ -345,6 +350,9 @@
                   },
                   "svalue": {
                       "max": 20
+                  },
+                  "jvalue": {
+                      "max": 20
                   }
               }
           ],
@@ -358,7 +366,8 @@
                 }
             },
             "values": {
-                "select": [ { "bind": { "to": "svalue" } },
+                "select": [ { "bind": { "to": "cvalue" } },
+                            { "bind": { "to": "svalue" } },
                             { "bind": { "to": "jvalue" } }],
                 "dataReductionAlgorithm": { "top": {} }
             }

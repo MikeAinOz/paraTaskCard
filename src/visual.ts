@@ -87,7 +87,7 @@ type Selection = d3.Selection<any, any, any, any>;
 interface Payload {
     assign: string, task: string, taskdescription: string,
     startdate: string, duedate: string, categoryid: string, username: string
-};
+}
 
 export interface SelectionIdOption extends LabelEnabledDataPoint, SelectableDataPoint {
     identity: ISelectionId;
@@ -153,6 +153,7 @@ export class Visual implements IVisual {
     private formatterValuesArr = [];
     private formatterValuesJArr = [];
     public static categoryJSON = "{}";
+    private templateHTML = "";
 
     private syncSelectionState(
         selection: Selection ,
@@ -237,7 +238,7 @@ export class Visual implements IVisual {
         // Use Fabric controls when rendering Adaptive Cards
         // ACFabric.useFabricComponents();
         adaptiveCard.parse(card);
-        adaptiveCard.onExecuteAction = function(action) { 
+        adaptiveCard.onExecuteAction = (action) => { 
             let data = action["_processedData"];
             if (that.categoryName) {
                 data[that.categoryName] = that.categoryId;
@@ -273,7 +274,7 @@ export class Visual implements IVisual {
                 'Content-Type': 'application/json'
             }
         })
-            .then(async function (response) {
+            .then(async (response) => {
                 if (response.status >= 400 && response.status < 600) {
                     const text = await response.text();
                     that.functionAlert("Failed!");
@@ -342,6 +343,8 @@ export class Visual implements IVisual {
         that.inputChanged = false;
         this.removeAllCalss();
         if (theme !== 0) $(".bigDiv").addClass("theme" + theme);
+        this.setIdenityIntoDiv();
+        this.setBehavior(this.divSelection);
         // input.on("change", function(){
         //     that.inputChanged = true;
         //     button.dispatch("click");
@@ -352,7 +355,7 @@ export class Visual implements IVisual {
         let childWidth = this.settings.cardWidth;
         for (let j = 0; j < data.length; j++) {
             let category = data[j].category;
-            let div = this.cardDiv.append("div").classed("cardDiv", true).classed("childDiv", true).classed("div_" + j, true).style("padding", this.settings.padding + "px").style("margin", this.settings.margin + "px").style("width", childWidth + "px").attr("category", category);
+            let div = this.cardDiv.append("div").classed("childDiv", true).classed("div_" + j, true).style("padding", this.settings.padding + "px").style("margin", this.settings.margin + "px").style("width", childWidth + "px").attr("category", category);
             if (this.settings.categoryShow) {
                 div.append("h1").text(category).style("font-size", this.settings.categoryFontSize + "px").style("color", this.settings.categoryFontColor).style("font-family", this.settings.categoryFontFamily).style("font-weight", this.settings.categoryFontWeight);
             }
@@ -360,8 +363,10 @@ export class Visual implements IVisual {
                 div.style("border", this.settings.borderSize + "px solid" + this.settings.borderColor);
             }
             let html;
-            if (data[j].svalue !== null) html = this.renderCard1(data[j].cvalue, data[j].svalue);
-            else html = this.renderCard(data[j].cvalue);
+            // if (data[j].svalue !== null) html = this.renderCard1(data[j].cvalue, data[j].svalue);
+            // else html = this.renderCard(data[j].cvalue);
+            if (data[j].svalue !== null) html = this.renderCard1(this.templateHTML, data[j].svalue);
+            else html = this.renderCard(this.templateHTML);
             div.node().append(html);
         }
     }
@@ -608,6 +613,7 @@ export class Visual implements IVisual {
         this.setSelectedIdOptions(categorical, dataViews[0]);
         let innerValueCount = 0;
         this.jvalueName = [], this.svalueName = [];
+        this.templateHTML = "";
         for (let i = 0; i < values.length; i++) {
             if (values[i].source.roles["svalue"]) {
                 let displayName = values[i].source.displayName.toString();
@@ -618,7 +624,7 @@ export class Visual implements IVisual {
                     tmp.push(values[i].values[j]);
                 }
                 svalueArr.push(tmp);
-            }else if (values[i].source.roles["jvalue"]) {
+            } else if (values[i].source.roles["jvalue"]) {
                 let displayName = values[i].source.displayName.toString();
                 if (displayName.indexOf("First ") == 0) displayName = displayName.slice(6);
                 this.jvalueName.push(displayName);
@@ -627,36 +633,59 @@ export class Visual implements IVisual {
                     tmp.push(values[i].values[j]);
                 }
                 jvalueArr.push(tmp);
+            } else if (values[i].source.roles["cvalue"]) {
+                for (let j = 0; j < values[i].values.length; j++) { 
+                    this.templateHTML = values[i].values[j];
+                }
             }
         }
+        // if (this.templateHTML === "") return;
         this.categoryName = null;
         this.getFormatter(dataViews[0]);
         if (categorical.categories) categories = categorical.categories[0].values, this.categoryName = categorical.categories[0].source.displayName, this.categoryId = categorical.categories[0].values[0];
         else categories = this.jvalueName;
         let data = this.getData(categories, jvalueArr, svalueArr);
-        if (that.prevTemplateUrl !== that.settings.templateUrl || Visual.categoryJSON !== JSON.stringify(options.dataViews[0].categorical)) {
-            // using XMLHttpRequest
-            let xhr = new XMLHttpRequest();
-            xhr.open("GET", this.settings.templateUrl, true);
-            xhr.onload = function () {
-                for (let i = 0; i < data.length; i++) data[i].cvalue = xhr.responseText, that.templateJSON = xhr.responseText;
-                that.drawHtml(sandboxWidth, sandboxHeight, data);
-                that.prevTemplateUrl = that.settings.templateUrl;
-                that.prevData = data;
-                Visual.categoryJSON = JSON.stringify(options.dataViews[0].categorical);
-            };
-            xhr.onerror = function () {
-                that.cardDiv.append("text").text("Document not loaded, check Url");
-            }
-            xhr.send();
-        } else {
-            this.drawHtml(sandboxWidth, sandboxHeight, that.prevData);
-        }
-        this.tooltipServiceWrapper.addTooltip(this.clipSelection, (tooltipEvent: TooltipEventArgs < SelectionIdOption > ) => this.getTooltipData(tooltipEvent)
-            , (tooltipEvent: TooltipEventArgs < SelectionIdOption > ) => tooltipEvent.data.identity);
+        // if (that.prevTemplateUrl !== that.settings.templateUrl || Visual.categoryJSON !== JSON.stringify(options.dataViews[0].categorical)) {
+        //     // using XMLHttpRequest
+        //     let xhr = new XMLHttpRequest();
+        //     xhr.open("GET", this.settings.templateUrl, true);
+        //     xhr.onload = function () {
+        //         for (let i = 0; i < data.length; i++) data[i].cvalue = xhr.responseText, that.templateJSON = xhr.responseText;
+        //         that.drawHtml(sandboxWidth, sandboxHeight, data);
+        //         that.prevTemplateUrl = that.settings.templateUrl;
+        //         that.prevData = data;
+        //         Visual.categoryJSON = JSON.stringify(options.dataViews[0].categorical);
+        //     };
+        //     xhr.onerror = function () {
+        //         that.cardDiv.append("text").text("Document not loaded, check Url");
+        //     }
+        //     xhr.send();
+        // } else {
+        //     this.drawHtml(sandboxWidth, sandboxHeight, that.prevData);
+        // }
+        this.drawHtml(sandboxWidth, sandboxHeight, data);
         this.tooltipServiceWrapper.addTooltip(this.divSelection, (tooltipEvent: TooltipEventArgs < SelectionIdOption > ) => this.getTooltipData(tooltipEvent)
-            , (tooltipEvent: TooltipEventArgs < SelectionIdOption > ) => tooltipEvent.data.identity);
+            , (tooltipEvent: TooltipEventArgs < SelectionIdOption > ) => null);
         this.events.renderingFinished(options);
+    }
+    
+    private getSelectionData(selectionIdOptions, clipSelection) {
+        let labelData = [];
+        clipSelection.each(() => {
+            labelData.push(selectionIdOptions[0]);
+        });
+        return labelData;
+    }
+
+    private setIdenityIntoDiv() {
+        let selectionIdOptions = this.selectionIdOptions;
+        // this.clipSelection = d3.selectAll(".childDiv").selectAll("*");
+        this.divSelection = d3.selectAll(".childDiv");
+        // this.clipSelection.data(this.getSelectionData(selectionIdOptions, this.clipSelection));
+        this.divSelection.data(this.getSelectionData(selectionIdOptions, this.divSelection));
+        d3.selectAll(".bigDiv").data(selectionIdOptions);
+        // this.getContextMenu(this.divSelection, this.selectionManager);
+        this.getContextMenu(this.bigDiv, this.selectionManager);
     }
 
     private getTooltipData(value: any): VisualTooltipDataItem[] {
@@ -713,7 +742,7 @@ export class Visual implements IVisual {
                 objectName: "renderGroup",
                 selector: null,
                 properties: {
-                    templateUrl: this.settings.templateUrl,
+                    // templateUrl: this.settings.templateUrl,
                 }
             });
         }
