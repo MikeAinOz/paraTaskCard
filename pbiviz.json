@@ -1,11 +1,11 @@
 {
   "visual": {
-    "name": "ParaTaskCards 2.5.0",
-    "displayName": "ParaTaskCards 2.5.0",
+    "name": "ParaTaskCard 3.1.0",
+    "displayName": "ParaTaskCard 3.1.0",
     "guid": "paraTaskCardBDD1DA3D7B8F41D0B27B48063F14B8FA",
     "visualClassName": "Visual",
-    "version": "2.5.0",
-    "description": "ParaTaskCards",
+    "version": "3.1.0",
+    "description": "ParaTaskCard",
     "supportUrl": "smith11041104@gmail.com",
     "gitHubUrl": ""
   },
